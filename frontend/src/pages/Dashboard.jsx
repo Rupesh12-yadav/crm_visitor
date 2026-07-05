@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 function Dashboard() {
   const [stats, setStats] = useState({ totalCustomers: 0, activeCustomers: 0, visitorsToday: 0, checkedIn: 0 });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    axios.get('/api/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } })
+    // El interceptor de api.js adjuntará el token automáticamente
+    api.get('/api/dashboard/stats')
       .then(res => setStats(res.data))
       .catch(() => localStorage.clear());
   }, []);

@@ -1,30 +1,29 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api'; // Asegúrate que la ruta a api.js sea correcta
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', status: 'active' });
   const [editId, setEditId] = useState(null);
-  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    axios.get(`/api/customers?search=${search}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => setCustomers(res.data));
-  }, [search]);
+    api.get(`/api/customers?search=${search}`)
+      .then(res => setCustomers(res.data))
+      .catch(err => console.error("Error fetching customers:", err));
+  }, [search, customers.length]); // Refresca cuando la lista cambia
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editId) {
-        await axios.put(`/api/customers/${editId}`, form, { headers: { Authorization: `Bearer ${token}` } });
+        await api.put(`/api/customers/${editId}`, form);
       } else {
-        await axios.post('/api/customers', form, { headers: { Authorization: `Bearer ${token}` } });
+        await api.post('/api/customers', form);
       }
       setForm({ name: '', email: '', phone: '', company: '', status: 'active' });
       setEditId(null);
-      const res = await axios.get(`/api/customers?search=${search}`, { headers: { Authorization: `Bearer ${token}` } });
-      setCustomers(res.data);
+      // La lista se refrescará por el useEffect
     } catch (err) {
       alert(err.response?.data?.message || 'Error');
     }
@@ -32,7 +31,7 @@ function Customers() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this customer?')) return;
-    await axios.delete(`/api/customers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+    await api.delete(`/api/customers/${id}`);
     setCustomers(customers.filter(c => c._id !== id));
   };
 

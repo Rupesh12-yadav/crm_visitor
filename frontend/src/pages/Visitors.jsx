@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 function Visitors() {
   const [visitors, setVisitors] = useState([]);
   const [tab, setTab] = useState('checkin');
   const [form, setForm] = useState({ visitorName: '', phone: '', personToMeet: '', purpose: '' });
-  const token = localStorage.getItem('token');
 
   useEffect(() => {
     if (tab === 'history') {
-      axios.get('/api/visitors/history', { headers: { Authorization: `Bearer ${token}` } })
+      api.get('/api/visitors/history')
         .then(res => setVisitors(res.data));
     }
   }, [tab]);
@@ -17,7 +16,7 @@ function Visitors() {
   const handleCheckIn = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/visitors/checkin', form, { headers: { Authorization: `Bearer ${token}` } });
+      await api.post('/api/visitors/checkin', form);
       alert('Visitor checked in!');
       setForm({ visitorName: '', phone: '', personToMeet: '', purpose: '' });
     } catch (err) {
@@ -26,8 +25,8 @@ function Visitors() {
   };
 
   const handleCheckOut = async (id) => {
-    await axios.put(`/api/visitors/checkout/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
-    const res = await axios.get('/api/visitors/history', { headers: { Authorization: `Bearer ${token}` } });
+    await api.put(`/api/visitors/checkout/${id}`);
+    const res = await api.get('/api/visitors/history');
     setVisitors(res.data);
   };
 
