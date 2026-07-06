@@ -18,9 +18,9 @@ const QRCode = ({ text, size = 128 }) => {
       <img 
         src={qrUrl} 
         alt="QR Code" 
-        className="border-2 border-gray-300 dark:border-gray-600 rounded-lg"
+        className="border-2 border-gray-300 rounded-lg"
       />
-      <p className="text-xs text-gray-500 dark:text-gray-400">Scan for details</p>
+      <p className="text-xs text-gray-500">Scan for details</p>
     </div>
   );
 };

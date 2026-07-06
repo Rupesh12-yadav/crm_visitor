@@ -29,7 +29,9 @@ function Navbar({ setIsAuth }) {
               Visitors
             </NavLink>
           </div>
-          <button onClick={logout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md transition-colors">Logout</button>
+          <div className="flex items-center gap-4">
+            <button onClick={logout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md transition-colors">Logout</button>
+          </div>
         </div>
       </div>
     </nav>
