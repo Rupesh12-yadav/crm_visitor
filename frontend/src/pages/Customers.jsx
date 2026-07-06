@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api'; // Asegúrate que la ruta a api.js sea correcta
 import { useDebounce } from '../components/useDebounce';
 import Spinner from '../components/Spinner';
+import Pagination from '../components/Pagination';
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -10,16 +11,22 @@ function Customers() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', status: 'active' });
   const [editId, setEditId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchCustomers = () => {
+  const fetchCustomers = (page = 1) => {
     setIsLoading(true);
-    api.get(`/api/customers?search=${debouncedSearch}`)
-      .then(res => setCustomers(res.data))
+    api.get(`/api/customers?search=${debouncedSearch}&page=${page}&limit=10`)
+      .then(res => {
+        setCustomers(res.data.customers);
+        setTotalPages(res.data.totalPages);
+        setCurrentPage(res.data.currentPage);
+      })
       .catch(err => console.error("Error fetching customers:", err))
       .finally(() => setIsLoading(false));
   };
 
-  useEffect(fetchCustomers, [debouncedSearch]);
+  useEffect(() => { fetchCustomers(1) }, [debouncedSearch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +38,7 @@ function Customers() {
       }
       setForm({ name: '', email: '', phone: '', company: '', status: 'active' });
       setEditId(null);
-      fetchCustomers(); // Recarga explícitamente la lista
+      fetchCustomers(currentPage); // Recarga explícitamente la lista
     } catch (err) {
       alert(err.response?.data?.message || 'Error');
     }
@@ -41,7 +48,7 @@ function Customers() {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       try {
         await api.delete(`/api/customers/${id}`);
-        fetchCustomers(); // Refetch to ensure data consistency
+        fetchCustomers(currentPage); // Refetch to ensure data consistency
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to delete customer');
       }
@@ -57,6 +64,11 @@ function Customers() {
     setForm({ name: '', email: '', phone: '', company: '', status: 'active' });
     setEditId(null);
   };
+  
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages)
+      fetchCustomers(page);
+  }
 
   return (
     <div className="p-6">
@@ -120,6 +132,7 @@ function Customers() {
           </table>
         </div>
       )}
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
     </div>
   );
 }

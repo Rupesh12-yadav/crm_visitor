@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
 import Spinner from '../components/Spinner';
+import Pagination from '../components/Pagination';
+import QRCode from '../components/QRCode';
 
 function Visitors() {
   const [visitors, setVisitors] = useState([]);
   const [tab, setTab] = useState('checkin');
   const [form, setForm] = useState({ visitorName: '', phone: '', personToMeet: '', purpose: '' });
   const [isLoading, setIsLoading] = useState(false);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const fetchHistory = () => {
     setIsLoading(true);
     api.get('/api/visitors/history')
@@ -15,12 +18,26 @@ function Visitors() {
       .catch(err => console.error("Error fetching history:", err))
       .finally(() => setIsLoading(false));
   };
-
+  
+  const fetchHistoryPaginated = (page = 1) => {
+    setIsLoading(true);
+    api.get(`/api/visitors/history?page=${page}&limit=10`)
+      .then(res => {
+        setVisitors(res.data.visitors);
+        setTotalPages(res.data.totalPages);
+        setCurrentPage(Number(res.data.currentPage));
+      })
+      .catch(err => console.error("Error fetching history:", err))
+      .finally(() => setIsLoading(false));
+  };
+  
   useEffect(() => {
     if (tab === 'history') {
-      fetchHistory();
+      fetchHistoryPaginated(1); // Fetch first page on tab switch
     }
   }, [tab]);
+
+  const handlePageChange = (page) => fetchHistoryPaginated(page);
 
   const handleCheckIn = async (e) => {
     e.preventDefault();
@@ -38,7 +55,7 @@ function Visitors() {
     try {
       const { data: updatedVisitor } = await api.put(`/api/visitors/checkout/${id}`);
       // Update state locally for instant UI feedback
-      setVisitors(visitors.map(v => v._id === id ? updatedVisitor : v));
+      fetchHistoryPaginated(currentPage); // Refetch current page to show updated data
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to check out');
     }
@@ -74,6 +91,7 @@ function Visitors() {
                 <th className="p-3 text-left text-sm font-semibold text-gray-600">Purpose</th>
                 <th className="p-3 text-left text-sm font-semibold text-gray-600">Check-In</th>
                 <th className="p-3 text-left text-sm font-semibold text-gray-600">Check-Out</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-600">QR Code</th>
                 <th className="p-3 text-left text-sm font-semibold text-gray-600">Action</th>
               </tr>
             </thead>
@@ -86,6 +104,7 @@ function Visitors() {
                   <td className="p-3 text-sm">{v.purpose}</td>
                   <td className="p-3 text-sm">{new Date(v.checkInTime).toLocaleString()}</td>
                   <td className="p-3 text-sm">{v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '-'}</td>
+                  <td className="p-3"><QRCode text={`Name: ${v.visitorName}, Phone: ${v.phone}, Meeting: ${v.personToMeet}`} size={64} /></td>
                   <td className="p-3">
                     {!v.checkOutTime && (
                       <button onClick={() => handleCheckOut(v._id)} className="text-red-600 hover:underline text-sm">
@@ -99,6 +118,7 @@ function Visitors() {
           </table>
         </div>
       )}
+      {tab === 'history' && !isLoading && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />}
     </div>
   );
 }

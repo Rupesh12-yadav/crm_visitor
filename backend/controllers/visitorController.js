@@ -20,8 +20,14 @@ const checkOut = async (req, res) => {
 };
 
 const getHistory = async (req, res) => {
-  const visitors = await Visitor.find().sort({ checkInTime: -1 });
-  res.json(visitors);
+  const { page = 1, limit = 10 } = req.query;
+  const visitors = await Visitor.find()
+    .sort({ checkInTime: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit);
+  
+  const count = await Visitor.countDocuments();
+  res.json({ visitors, totalPages: Math.ceil(count / limit), currentPage: page });
 };
 
 const getTodayStats = async (req, res) => {
