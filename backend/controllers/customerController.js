@@ -1,7 +1,10 @@
 const Customer = require('../models/Customer');
 
 const getCustomers = async (req, res) => {
-  const { search } = req.query;
+  const { search, page = 1, limit = 10 } = req.query;
+  const pageNum = Number(page);
+  const limitNum = Number(limit);
+
   let query = {};
   if (search) {
     query = { $or: [
@@ -10,8 +13,16 @@ const getCustomers = async (req, res) => {
       { company: { $regex: search, $options: 'i' } }
     ]};
   }
-  const customers = await Customer.find(query).sort({ createdAt: -1 });
-  res.json(customers);
+
+  const totalCustomers = await Customer.countDocuments(query);
+  const totalPages = Math.ceil(totalCustomers / limitNum);
+
+  const customers = await Customer.find(query)
+    .sort({ createdAt: -1 })
+    .skip((pageNum - 1) * limitNum)
+    .limit(limitNum);
+    
+  res.json({ customers, totalPages, currentPage: pageNum });
 };
 
 const createCustomer = async (req, res) => {

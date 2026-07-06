@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../api'; // Asegúrate que la ruta a api.js sea correcta
 import { useDebounce } from '../components/useDebounce';
 import Spinner from '../components/Spinner';
@@ -14,31 +14,34 @@ function Customers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchCustomers = (page = 1) => {
+  const fetchCustomers = useCallback((page = 1) => {
     setIsLoading(true);
     api.get(`/api/customers?search=${debouncedSearch}&page=${page}&limit=10`)
       .then(res => {
-        setCustomers(res.data.customers);
-        setTotalPages(res.data.totalPages);
-        setCurrentPage(res.data.currentPage);
+        setCustomers(res.data.customers || []); // Ensure customers is always an array
+        setTotalPages(res.data.totalPages || 1);
+        setCurrentPage(res.data.currentPage || 1);
       })
       .catch(err => console.error("Error fetching customers:", err))
       .finally(() => setIsLoading(false));
-  };
+  }, [debouncedSearch]);
 
-  useEffect(() => { fetchCustomers(1) }, [debouncedSearch]);
+  useEffect(() => {
+    fetchCustomers(1);
+  }, [fetchCustomers]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const isEditing = !!editId;
     try {
-      if (editId) {
+      if (isEditing) {
         await api.put(`/api/customers/${editId}`, form);
       } else {
         await api.post('/api/customers', form);
       }
       setForm({ name: '', email: '', phone: '', company: '', status: 'active' });
       setEditId(null);
-      fetchCustomers(currentPage); // Recarga explícitamente la lista
+      fetchCustomers(isEditing ? currentPage : 1); // On new customer, go to page 1
     } catch (err) {
       alert(err.response?.data?.message || 'Error');
     }
@@ -48,7 +51,12 @@ function Customers() {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       try {
         await api.delete(`/api/customers/${id}`);
-        fetchCustomers(currentPage); // Refetch to ensure data consistency
+        // If the last item on a page is deleted, go to the previous page
+        if (customers.length === 1 && currentPage > 1) {
+          fetchCustomers(currentPage - 1);
+        } else {
+          fetchCustomers(currentPage);
+        }
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to delete customer');
       }
@@ -56,7 +64,13 @@ function Customers() {
   };
 
   const handleEdit = (c) => {
-    setForm(c);
+    setForm({
+      name: c.name || '',
+      email: c.email || '',
+      phone: c.phone || '',
+      company: c.company || '',
+      status: c.status || 'active'
+    });
     setEditId(c._id);
   };
 

@@ -23,7 +23,10 @@ function App() {
     <BrowserRouter>
       {isAuth && <Navbar setIsAuth={setIsAuth} />}
       <Routes>
-        <Route path="/" element={<Login setIsAuth={setIsAuth} />} />
+        <Route 
+          path="/" 
+          element={isAuth ? <Navigate to="/dashboard" /> : <Login setIsAuth={setIsAuth} />} 
+        />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
         <Route path="/visitors" element={<PrivateRoute><Visitors /></PrivateRoute>} />
