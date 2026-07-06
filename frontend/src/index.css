@@ -1,2 +1,9 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: system-ui, -apple-system, sans-serif; background: #f3f4f6; }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  @apply dark:bg-gray-900 dark:text-gray-200;
+  @apply transition-colors duration-300;
+}
