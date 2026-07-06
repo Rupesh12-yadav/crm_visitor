@@ -1,12 +1,16 @@
 import axios from 'axios';
 
-// Determina la URL base de la API según el entorno
-const API_URL = import.meta.env.VITE_API_URL
+// Production Backend URL
+const API_URL = 'https://crm-visitors.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
+// Add token to requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
