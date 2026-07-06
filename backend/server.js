@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const { initAdmin } = require('./controllers/authController');
+const { seedAll } = require('./seed');
 
 const app = express();
 
@@ -16,28 +16,14 @@ app.use(express.json());
 
 // Connect to MongoDB
 connectDB().then(() => {
-  initAdmin();
+  seedAll();
 });
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/visitors', require('./routes/visitors'));
-
-// Dashboard stats
-app.get('/api/dashboard/stats', require('./middleware/auth'), async (req, res) => {
-  const Customer = require('./models/Customer');
-  const Visitor = require('./models/Visitor');
-  
-  const totalCustomers = await Customer.countDocuments();
-  const activeCustomers = await Customer.countDocuments({ status: 'active' });
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const visitorsToday = await Visitor.countDocuments({ checkInTime: { $gte: today } });
-  const checkedIn = await Visitor.countDocuments({ checkInTime: { $gte: today }, checkOutTime: null });
-  
-  res.json({ totalCustomers, activeCustomers, visitorsToday, checkedIn });
-});
+app.use('/api/dashboard', require('./routes/dashboard'));
 
 // Health check
 app.get('/health', (req, res) => {

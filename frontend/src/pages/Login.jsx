@@ -22,21 +22,24 @@ function Login({ setIsAuth }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center">Visitor CRM Login</h2>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md">
+        <div className="mb-6 text-center">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Welcome Back!</h2>
+          <p className="text-gray-500 dark:text-gray-400">Sign in to your Visitor CRM</p>
+        </div>
+        {error && <p className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm mb-4 p-3 rounded-lg text-center">{error}</p>}
         <input
           type="email" placeholder="Email" value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 border rounded mb-4" required
+          className="w-full p-3 border rounded-lg mb-4 bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" required
         />
         <input
           type="password" placeholder="Password" value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 border rounded mb-4" required
+          className="w-full p-3 border rounded-lg mb-4 bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" required
         />
-        <button className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700">Login</button>
+        <button className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 font-semibold">Login</button>
         <p className="text-sm text-gray-500 mt-4 text-center">
           Demo: admin@gmail.com / 123456
         </p>
