@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import Spinner from '../components/Spinner';
 
 function Dashboard() {
   const [stats, setStats] = useState({ totalCustomers: 0, activeCustomers: 0, visitorsToday: 0, checkedIn: 0 });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // El interceptor de api.js adjuntará el token automáticamente
     api.get('/api/dashboard/stats')
       .then(res => setStats(res.data))
-      .catch(() => localStorage.clear());
+      .catch(err => console.error("Failed to fetch stats:", err))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const cards = [
@@ -17,6 +20,12 @@ function Dashboard() {
     { title: 'Visitors Today', value: stats.visitorsToday, color: 'bg-purple-500' },
     { title: 'Checked In', value: stats.checkedIn, color: 'bg-orange-500' }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64"><Spinner /></div>
+    );
+  }
 
   return (
     <div className="p-6">

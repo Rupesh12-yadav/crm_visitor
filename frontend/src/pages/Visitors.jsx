@@ -1,15 +1,24 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import Spinner from '../components/Spinner';
 
 function Visitors() {
   const [visitors, setVisitors] = useState([]);
   const [tab, setTab] = useState('checkin');
   const [form, setForm] = useState({ visitorName: '', phone: '', personToMeet: '', purpose: '' });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchHistory = () => {
+    setIsLoading(true);
+    api.get('/api/visitors/history')
+      .then(res => setVisitors(res.data))
+      .catch(err => console.error("Error fetching history:", err))
+      .finally(() => setIsLoading(false));
+  };
 
   useEffect(() => {
     if (tab === 'history') {
-      api.get('/api/visitors/history')
-        .then(res => setVisitors(res.data));
+      fetchHistory();
     }
   }, [tab]);
 
@@ -19,15 +28,20 @@ function Visitors() {
       await api.post('/api/visitors/checkin', form);
       alert('Visitor checked in!');
       setForm({ visitorName: '', phone: '', personToMeet: '', purpose: '' });
+      setTab('history'); // Switch to history to see the new entry
     } catch (err) {
       alert(err.response?.data?.message || 'Error');
     }
   };
 
   const handleCheckOut = async (id) => {
-    await api.put(`/api/visitors/checkout/${id}`);
-    const res = await api.get('/api/visitors/history');
-    setVisitors(res.data);
+    try {
+      const { data: updatedVisitor } = await api.put(`/api/visitors/checkout/${id}`);
+      // Update state locally for instant UI feedback
+      setVisitors(visitors.map(v => v._id === id ? updatedVisitor : v));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to check out');
+    }
   };
 
   return (
@@ -47,32 +61,36 @@ function Visitors() {
           <input type="text" placeholder="Purpose" value={form.purpose} onChange={(e) => setForm({...form, purpose: e.target.value})} className="w-full p-3 border rounded mb-4" required />
           <button type="submit" className="w-full bg-green-600 text-white p-3 rounded hover:bg-green-700">Check-In Visitor</button>
         </form>
+      ) : isLoading ? (
+        <div className="flex justify-center p-10"><Spinner /></div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-3 text-left">Visitor</th>
-                <th className="p-3 text-left">Phone</th>
-                <th className="p-3 text-left">Meeting</th>
-                <th className="p-3 text-left">Purpose</th>
-                <th className="p-3 text-left">Check-In</th>
-                <th className="p-3 text-left">Check-Out</th>
-                <th className="p-3 text-left">Action</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-600">Visitor</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-600">Phone</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-600">Meeting</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-600">Purpose</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-600">Check-In</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-600">Check-Out</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-600">Action</th>
               </tr>
             </thead>
             <tbody>
               {visitors.map(v => (
                 <tr key={v._id} className="border-t">
-                  <td className="p-3">{v.visitorName}</td>
-                  <td className="p-3">{v.phone}</td>
-                  <td className="p-3">{v.personToMeet}</td>
-                  <td className="p-3">{v.purpose}</td>
-                  <td className="p-3">{new Date(v.checkInTime).toLocaleString()}</td>
-                  <td className="p-3">{v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '-'}</td>
+                  <td className="p-3 text-sm">{v.visitorName}</td>
+                  <td className="p-3 text-sm">{v.phone}</td>
+                  <td className="p-3 text-sm">{v.personToMeet}</td>
+                  <td className="p-3 text-sm">{v.purpose}</td>
+                  <td className="p-3 text-sm">{new Date(v.checkInTime).toLocaleString()}</td>
+                  <td className="p-3 text-sm">{v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '-'}</td>
                   <td className="p-3">
                     {!v.checkOutTime && (
-                      <button onClick={() => handleCheckOut(v._id)} className="text-red-600">Check-Out</button>
+                      <button onClick={() => handleCheckOut(v._id)} className="text-red-600 hover:underline text-sm">
+                        Check-Out
+                      </button>
                     )}
                   </td>
                 </tr>

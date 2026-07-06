@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 
 function Navbar({ setIsAuth }) {
   const navigate = useNavigate();
@@ -9,14 +9,16 @@ function Navbar({ setIsAuth }) {
     navigate('/');
   };
 
+  const activeLinkStyle = { textDecoration: 'underline' };
+
   return (
     <nav className="bg-blue-600 text-white p-4 shadow">
       <div className="flex justify-between items-center max-w-6xl mx-auto">
         <h1 className="text-xl font-bold">Visitor CRM</h1>
         <div className="flex gap-6">
-          <a href="/dashboard" className="hover:underline">Dashboard</a>
-          <a href="/customers" className="hover:underline">Customers</a>
-          <a href="/visitors" className="hover:underline">Visitors</a>
+          <NavLink to="/dashboard" style={({ isActive }) => isActive ? activeLinkStyle : undefined}>Dashboard</NavLink>
+          <NavLink to="/customers" style={({ isActive }) => isActive ? activeLinkStyle : undefined}>Customers</NavLink>
+          <NavLink to="/visitors" style={({ isActive }) => isActive ? activeLinkStyle : undefined}>Visitors</NavLink>
           <button onClick={logout} className="hover:underline">Logout</button>
         </div>
       </div>
